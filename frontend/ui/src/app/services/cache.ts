@@ -54,6 +54,10 @@ export abstract class ReactiveList<T> {
     this.next(arg);
   }
 
+  public find(id: unknown): T | undefined {
+    return this.state$.value?.find((item) => this.identify(item) === id);
+  }
+
   public get(): Observable<T[]> {
     return this.items$;
   }
