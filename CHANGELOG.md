@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.7.4](https://github.com/distr-sh/distr/compare/4.7.3...4.7.4) (2026-10-29)
+
+
+### Bug Fixes
+
+* **agent:** consider all 4xx errors as rejection when pushing logs ([#3675](https://github.com/distr-sh/distr/issues/3675)) ([6a789dd](https://github.com/distr-sh/distr/commit/6a789dd294cbcb7597e896b484ac90e57ca05316))
+
+
+### Other
+
+* **frontend:** improve support bundle creation flow ([#3676](https://github.com/distr-sh/distr/issues/3676)) ([7071746](https://github.com/distr-sh/distr/commit/707174621f2122720e2779bb86c2658419f11ffa))
+
+
+### Docs
+
+* **website:** update candor security testimonial ([#3656](https://github.com/distr-sh/distr/issues/3656)) ([69007eb](https://github.com/distr-sh/distr/commit/69007ebc135c1ce1a7570c12436c4ab2f84df998))
+
 ## [4.7.3](https://github.com/distr-sh/distr/compare/4.7.2...4.7.3) (2026-10-28)
 
 
