@@ -35,10 +35,13 @@ const (
 	// for logging.
 	CustomOIDCConfigurationIDKey = "oidc"
 
-	audienceUserValue = "user"
-	// audienceControllerValue keeps the value from before the rename to controller, so a token issued before
-	// an upgrade still carries the audience of one issued after it.
-	audienceControllerValue = "agent"
+	// AudienceUser is the audience of tokens minted for an interactive user session, including
+	// password reset and invitation tokens.
+	AudienceUser = "user"
+	// AudienceController is the audience of tokens minted for a controller (deployment target).
+	// It keeps the value from before the rename to controller, so a token issued before an upgrade
+	// still carries the audience of one issued after it.
+	AudienceController = "agent"
 )
 
 // TokenScope identifies the purpose a special, unscoped user token was minted for, so that
@@ -59,12 +62,28 @@ var signingKey = sync.OnceValues(func() (jwk.SymmetricKey, error) {
 	return jwk.Import[jwk.SymmetricKey](env.JWTSecret())
 })
 
-func VerifyToken(token string) (jwt.Token, error) {
+// VerifyUserToken verifies a token minted for a user session. A valid signature alone is not
+// enough: the token must carry the user audience, so a token issued for another purpose (a
+// controller or a license key) can never enter the user authentication chain.
+func VerifyUserToken(token string) (jwt.Token, error) {
+	return verifyToken(token, AudienceUser)
+}
+
+// VerifyControllerToken verifies a token minted for a controller (deployment target), including
+// tokens issued before the rename to controller, which carry the same agent audience.
+func VerifyControllerToken(token string) (jwt.Token, error) {
+	return verifyToken(token, AudienceController)
+}
+
+func verifyToken(token string, audience string) (jwt.Token, error) {
 	key, err := signingKey()
 	if err != nil {
 		return nil, err
 	}
-	return jwt.ParseString(token, jwt.WithKey(jwa.HS256(), key))
+	return jwt.ParseString(token,
+		jwt.WithKey(jwa.HS256(), key),
+		jwt.WithAudience(audience),
+	)
 }
 
 func encode(claims map[string]any) (jwt.Token, string, error) {
@@ -142,7 +161,7 @@ func generateUserToken(
 		jwt.NotBeforeKey:     now,
 		jwt.ExpirationKey:    now.Add(validFor),
 		jwt.SubjectKey:       user.ID.String(),
-		jwt.AudienceKey:      audienceUserValue,
+		jwt.AudienceKey:      AudienceUser,
 		UserNameKey:          user.Name,
 		UserEmailKey:         user.Email,
 		UserEmailVerifiedKey: !env.UserEmailVerificationRequired() || user.EmailVerifiedAt != nil,
@@ -176,7 +195,7 @@ func GenerateControllerTokenValidFor(targetID, orgID uuid.UUID, validFor time.Du
 		jwt.NotBeforeKey:  now,
 		jwt.ExpirationKey: now.Add(validFor),
 		jwt.SubjectKey:    targetID.String(),
-		jwt.AudienceKey:   audienceControllerValue,
+		jwt.AudienceKey:   AudienceController,
 		OrgIdKey:          orgID.String(),
 	}
 	return encode(claims)

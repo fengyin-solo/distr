@@ -25,7 +25,7 @@ import (
 var Authentication = authn.New(
 	authn.Chain4(
 		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
-		jwt.Authenticator(authjwt.VerifyToken),
+		jwt.Authenticator(authjwt.VerifyUserToken),
 		authinfo.UserJWTAuthenticator(),
 		authinfo.DbAuthenticator(),
 	),
@@ -41,7 +41,7 @@ var Authentication = authn.New(
 var ControllerAuthentication = authn.New(
 	authn.Chain3(
 		token.NewExtractor(token.WithExtractorFuncs(token.FromHeader("Bearer"))),
-		jwt.Authenticator(authjwt.VerifyToken),
+		jwt.Authenticator(authjwt.VerifyControllerToken),
 		authinfo.ControllerJWTAuthenticator(),
 		// for controllers, db check is done in the controller auth middleware, therefore no DbAuthenticator here
 	),
@@ -67,7 +67,7 @@ var ArtifactsAuthentication = authn.New(
 			),
 			// Authenticate with controller JWT
 			authn.Chain3(
-				jwt.Authenticator(authjwt.VerifyToken),
+				jwt.Authenticator(authjwt.VerifyControllerToken),
 				authinfo.ControllerJWTAuthenticator(),
 				authinfo.ControllerDbAuthenticator(),
 			),
